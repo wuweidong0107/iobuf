@@ -95,3 +95,16 @@ size_t iobuf_add(struct iobuf *io, size_t offset, const void *buf,
     io->len += len;
     return len;
 }
+
+size_t iobuf_del(struct iobuf *io, size_t offset, size_t len)
+{
+    if (offset > io->len)
+        return 0;
+    if ((offset + len) > io->len)
+        len = io->len - offset;
+    
+    memmove(io->buf + offset, io->buf + offset + len, io->len - offset - len);
+    memzero(io->buf + io->len - len, len);
+    io->len -= len;
+    return len;
+}
