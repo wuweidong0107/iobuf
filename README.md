@@ -2,12 +2,15 @@
 
 A simple io buffer.
 
-# Build
+# Build and Run
 ```Bash
 $ make clean && make              # build release version
+
 $ ./test
 PASS
+
 $ make clean && make ver=debug    # build debug version
+
 $ ./test 
 memory realloc: 0 ---> 4096
    0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
