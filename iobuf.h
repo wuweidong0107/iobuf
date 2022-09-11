@@ -9,7 +9,7 @@ struct iobuf {
     size_t cap;         // Total size
 };
 
-#define IOBUF_CHUNK_SIZE (16)
+#define IOBUF_CHUNK_SIZE (4096)
 
 int iobuf_init(struct iobuf *io, size_t size);
 int iobuf_resize(struct iobuf *io, size_t new_size);

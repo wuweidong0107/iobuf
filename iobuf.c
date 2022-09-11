@@ -1,6 +1,7 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
+#include <ctype.h>
 #include "iobuf.h"
 
 #ifdef DEBUG
@@ -23,8 +24,10 @@ static void memzero(volatile unsigned char *buf, size_t len)
 int iobuf_resize(struct iobuf *io, size_t new_size)
 {
     int ok = 1;
+
     if (new_size % IOBUF_CHUNK_SIZE)
         new_size = (new_size / IOBUF_CHUNK_SIZE + 1) * IOBUF_CHUNK_SIZE;
+
     if (new_size == 0) {
         memzero(io->buf, io->cap);
         free(io->buf);
@@ -32,18 +35,18 @@ int iobuf_resize(struct iobuf *io, size_t new_size)
         io->len = io->cap = 0;
     } else if (new_size != io->cap) {
         DBG("memory realloc: %ld ---> %ld\n", io->cap, new_size);
-        void *p = realloc(io->buf, new_size);
+        void *p = calloc(1, new_size);
         if (p) {
             size_t len = min(new_size, io->len);
-            if(len > 0)
-                memmove(p, io->buf, len);
+            if (len > 0) memmove(p, io->buf, len);
+            memzero(io->buf, io->cap);
+            free(io->buf);
             io->buf = (unsigned char *)p;
             io->cap = new_size;
         } else {
             ok = 0;
         }
     }
-    iobuf_dump(io, io->cap);
     return ok;
 }
 
@@ -60,14 +63,28 @@ void iobuf_free(struct iobuf *io)
 void iobuf_dump(struct iobuf *io, size_t len)
 {
     size_t i;
+    size_t line = 16;
 
     if (len > io->cap)
         len = io->cap;
 
     for (i=0; i<len; i++) {
+        if (!(i%16))
+            DBG("%4lx  ", i);
         DBG("%02x ", io->buf[i]);
-        if (!((i+1) % 16))
+        
+        if (!((i+1) % 8))
+            DBG(" ");
+
+        if (!((i+1) % line)) {
+            int j = i - (line -1);
+            DBG("|");
+            for(; j<(i+1); j++) {
+                DBG("%c", isalnum(io->buf[j]) ? io->buf[j] : '.');
+            }
+            DBG("|");
             DBG("\n");
+        }
     }
     // printf("|");
     // for (i=0; i<len; i++)
